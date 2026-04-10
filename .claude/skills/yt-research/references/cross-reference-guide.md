@@ -102,6 +102,34 @@ For someone new to these topics, suggested sequence:
 
 ---
 
+### summary.md — Bilingual Supplement (when lang includes Russian)
+
+Append this section after the English content (including the footer line) when `session_config.lang` includes `ru`:
+
+```markdown
+---
+
+## Краткое содержание сессии (на русском)
+
+[2-3 абзаца синтеза результатов сессии на русском языке. Основные темы, ключевые выводы, заметные противоречия между источниками. Синтезируй из полей `russian_summary` всех включённых анализов — не копируй их дословно, а обобщи.]
+
+## Ключевые выводы по всем видео
+
+- [Вывод 1 — источник: [Название видео](./reports/slug.md)]
+- [Вывод 2 — источник: [Название видео](./reports/slug.md)]
+- [5–10 пунктов, каждый со ссылкой на источник]
+
+## Рекомендуемый порядок просмотра
+
+Для новичка в этих темах:
+
+1. [Название](./reports/slug.md) — почему начать здесь
+2. [Название](./reports/slug.md) — почему вторым
+3. ...
+```
+
+---
+
 ## sources.md Structure
 
 ```markdown

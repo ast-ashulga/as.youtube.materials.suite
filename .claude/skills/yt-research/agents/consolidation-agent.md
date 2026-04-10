@@ -61,6 +61,7 @@ The consolidated summary should:
 2. List 5-10 key insights drawn from multiple videos, each with source references
 3. Suggest a recommended reading order for a newcomer to the topics
 4. Note how many videos were included vs. rejected
+- Bilingual: if `session_config.lang` includes `ru`, append a Russian-language section after the English content (see the BILINGUAL SUMMARY template in `cross-reference-guide.md`). Synthesize it from the `russian_summary` fields of all included analyses.
 
 ## Step 6: Write sources.md
 
