@@ -1,0 +1,22 @@
+{
+  "video_id": "CEvIs9y1uog",
+  "video_url": "https://www.youtube.com/watch?v=CEvIs9y1uog",
+  "video_slug": "dont-build-agents-build-skills-instead-anthropic",
+  "title": "Don't Build Agents, Build Skills Instead \u2013 Barry Zhang & Mahesh Murag, Anthropic",
+  "channel": "AI Engineer",
+  "channel_url": "https://www.youtube.com/channel/UCLKPca3kwwd-B59HNr-_lvA",
+  "duration": 982,
+  "duration_str": "16:22",
+  "upload_date": "20251208",
+  "view_count": 1056214,
+  "description": "In the past year, we've seen rapid advancement of model intelligence and convergence on agent scaffolding. But there's still a gap: agents often lack the domain expertise and specialized knowledge needed for real-world work. We think Skills are the solution\u2014a minimal form factor for packaging procedural knowledge that agents can dynamically load. It's a portable, composable approach to giving one agent capabilities across domains. In this talk, we'll share how we built Skills at Anthropic, the n",
+  "slug": "dont-build-agents-build-skills-instead-barry-zhang-mahesh-mu",
+  "transcript": {
+    "lang": "en",
+    "type": "auto",
+    "segment_count": 35,
+    "method": "supadata",
+    "word_count": 2653,
+    "file": "dont-build-agents-build-skills-instead-anthropic.txt"
+  }
+}

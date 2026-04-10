@@ -1,0 +1,21 @@
+{
+  "id": "mViFYTwWvcM",
+  "title": "Spec-Driven Development: AI Assisted Coding Explained",
+  "channel": "IBM Technology",
+  "channel_url": "https://www.youtube.com/channel/UCKWaEZ-_VweaEx1j62do_vQ",
+  "duration": 540,
+  "duration_str": "9:00",
+  "upload_date": "20260228",
+  "view_count": 224999,
+  "description": "Ready to become a certified watsonx AI Assistant Engineer? Register now and use code IBMTechYT20 for 20% off of your exam → https://ibm.biz/BdpBwE\n\nLearn more about AI Code-Generation Software here → https://ibm.biz/BdpBwX\n\nIs AI-assisted coding the future? 🤔 Cedric Clyburn explores spec-driven development, a game-changing approach that combines LLMs with software development best practices. Learn how it differs from vibe coding, integrates SDLC principles, and improves coding workflows with req",
+  "slug": "spec-driven-development-ai-assisted-coding-explained",
+  "url": "https://www.youtube.com/watch?v=mViFYTwWvcM",
+  "transcript": {
+    "lang": "en",
+    "type": "auto",
+    "segment_count": 94,
+    "method": "supadata",
+    "available_langs": ["en"],
+    "word_count": 1597
+  }
+}

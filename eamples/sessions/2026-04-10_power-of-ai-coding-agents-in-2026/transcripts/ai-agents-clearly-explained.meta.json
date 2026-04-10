@@ -1,0 +1,22 @@
+{
+  "video_id": "FwOTs4UxQS4",
+  "video_url": "https://www.youtube.com/watch?v=FwOTs4UxQS4",
+  "slug": "ai-agents-clearly-explained",
+  "title": "AI Agents, Clearly Explained",
+  "channel": "Jeff Su",
+  "channel_url": "https://www.youtube.com/channel/UCwAnu01qlnVg1Ai2AbtTMaA",
+  "duration": 609,
+  "duration_str": "10:09",
+  "upload_date": "20250408",
+  "view_count": 4127813,
+  "description": "My AI Toolkit: https://academy.jeffsu.org/ai-toolkit?utm_source=youtube&utm_medium=video&utm_campaign=177\n\nUnderstanding AI Agents doesn't require a technical background. This video breaks down the evolution from basic LLMs like #ChatGPT to AI Workflows and finally to true #AI Agents through practical, real-world examples.\n\nLearn the key differences between these technologies and discover how concepts like RAG and ReAct actually work in simple terms. Perfect for regular AI users who want to unde",
+  "transcript": {
+    "lang": "en",
+    "type": "auto",
+    "segment_count": 20,
+    "method": "supadata",
+    "available_langs": ["en"],
+    "word_count": 1698,
+    "file": "ai-agents-clearly-explained.txt"
+  }
+}

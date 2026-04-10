@@ -135,7 +135,7 @@ celerybeat.pid
 *.sage.py
 
 # YouTube Materials Suite output
-sessions/
+/sessions/
 
 # Environments
 .env
@@ -209,3 +209,4 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 .claude/settings.local.json
+.claude/settings.json

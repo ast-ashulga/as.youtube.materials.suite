@@ -1,0 +1,22 @@
+{
+  "id": "FqPwHHrN1bg",
+  "url": "https://www.youtube.com/watch?v=FqPwHHrN1bg",
+  "slug": "what-is-agentic-ai-engineering-meta-staff-engineer",
+  "title": "What is Agentic AI Engineering (Meta Staff Engineer Explains)",
+  "channel": "John Kim",
+  "channel_url": "https://www.youtube.com/channel/UCiZotp9tZ4uXgXEjHDUYzBQ",
+  "duration": 1040,
+  "duration_str": "17:20",
+  "upload_date": "20260301",
+  "view_count": 39821,
+  "description": "In this video I break down the 5 pillars of agentic engineering, the practices\nthat separate people getting real leverage from AI from the ones still copy-pasting.\n\nEveryone doing AI coding is getting lumped in with vibe coding. Copy-pasting ChatGPT output and pointing at localhost is not the same thing as what engineers are doing at work every day. Peter Steinberger called vibe coding \"a slur.\" Karpathy coined \"agentic engineering.\" And I realized I've been practicing these same patterns for mo",
+  "transcript": {
+    "lang": "en",
+    "type": "auto",
+    "segment_count": 410,
+    "method": "supadata",
+    "available_langs": ["en"],
+    "word_count": 3267,
+    "file": "what-is-agentic-ai-engineering-meta-staff-engineer.txt"
+  }
+}
