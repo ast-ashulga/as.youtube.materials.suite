@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash scripts/setup.sh)",
+      "Bash(python3 scripts/*.py*)",
+      "Bash(.venv/bin/python scripts/*.py*)",
+      "Bash(yt-dlp *)",
+      "Bash(mkdir -p sessions/*)",
+      "Bash(mkdir -p .venv*)",
+      "Bash(ls -t sessions/)",
+      "Bash(ls sessions/*)",
+      "Bash(test -f .venv/bin/python*)",
+      "Bash(chmod +x scripts/*)",
+      "Bash(rm -f sessions/*/transcripts/*.meta.tmp)",
+      "Read(sessions/**)",
+      "Read(scripts/**)",
+      "Read(.claude/skills/**)",
+      "Write(sessions/**)",
+      "Edit(sessions/**)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "yt-research|yt-refine|yt-humanize",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'if [ ! -f .venv/bin/python ]; then echo \"{\\\"systemMessage\\\": \\\"WARNING: Python venv not found. Run: bash scripts/setup.sh — or the yt-research skill will do it automatically.\\\"}\"; fi'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
