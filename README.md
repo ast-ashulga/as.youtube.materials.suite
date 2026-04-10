@@ -95,6 +95,14 @@ Each session creates a folder: `sessions/YYYY-MM-DD_topic-slug/`
 - **standard**: + Notable Quotes, Action Items, Key Terminology
 - **comprehensive**: + Chapter Breakdown, Mental Models, Speaker Analysis
 
+## Using in Cursor (or other IDEs)
+
+This suite is built as a Claude Code skill. If you prefer **Cursor** or another IDE, you can migrate it using:
+
+**[as.migrate.c2c](https://github.com/ast-ashulga/as.migrate.c2c)** — a tool that converts Claude Code Agent Skills to the Cursor ecosystem format.
+
+Install and run it to get the `yt-research`, `yt-refine`, and `yt-humanize` skills working in your preferred environment.
+
 ## Example Session
 
 See [`examples/sessions/2026-04-10_power-of-ai-coding-agents-in-2026/`](examples/sessions/2026-04-10_power-of-ai-coding-agents-in-2026/) for a complete example output.
