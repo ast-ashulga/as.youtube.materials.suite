@@ -32,17 +32,19 @@ Run:
 {project_root}/.venv/bin/python {project_root}/scripts/fetch_transcript.py \
   --video-id {video_id} \
   --lang {lang} \
+  --retries 3 \
+  --delay 2 \
   --output {transcript_file} \
   2>{session_path}/transcripts/{video_slug}.meta.tmp
 ```
 
 Check the exit code:
-- Exit 0: success. Read metadata from the `.meta.tmp` file (JSON on stderr, redirected).
-- Exit 1: no transcript available → mark as rejected with reason "No transcript available"
-- Exit 2: video inaccessible/blocked → mark as rejected with reason "Video unavailable or request blocked"
-- Exit 3: dependency missing → report dependency error
+- **Exit 0**: success. Read metadata from the `.meta.tmp` file (JSON on stderr, redirected).
+- **Exit 1**: no transcript available (this video has no captions) → mark as rejected with reason "No transcript available"
+- **Exit 2**: API error or all retries exhausted → mark as rejected with reason "Transcript fetch failed — check SUPADATA_API_KEY or retry later"
+- **Exit 3**: API key missing or quota exceeded → report the specific error from stderr and stop (this affects all remaining videos too)
 
-If successful, parse the metadata JSON from `.meta.tmp` (it contains `lang`, `type`, `segment_count`).
+If successful, parse the metadata JSON from `.meta.tmp` (contains `lang`, `type`, `segment_count`, `method`, `available_langs`).
 
 Clean up: `rm -f {session_path}/transcripts/{video_slug}.meta.tmp`
 
@@ -113,4 +115,5 @@ Or if rejected:
 
 - Always return a result, even on failure — the orchestrator needs to track status for every video.
 - If the transcript file already exists and is non-empty, skip fetching and return `{"status": "transcript_fetched", "cached": true, ...}`.
+- If exit code 3 (API key/quota error): escalate to the orchestrator immediately — this is a configuration problem that will affect all remaining videos.
 - Log any errors to stderr with the video slug as context.

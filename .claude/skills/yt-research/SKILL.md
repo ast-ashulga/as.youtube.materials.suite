@@ -127,8 +127,10 @@ Tell the user: "Found {N} candidate videos. Starting transcript fetch..."
 
 Read the transcript agent prompt from `.claude/skills/yt-research/agents/transcript-agent.md`.
 
-Spawn transcript agents in parallel batches of up to 5. For each candidate video:
+Spawn transcript agents in parallel batches of up to 3. For each candidate video:
 - Pass: video_url, video_id, video_slug, session_path, lang, project_root
+
+After each batch of transcript agents completes, wait 3-5 seconds before spawning the next batch. This spacing reduces the chance of YouTube rate-limiting when processing many videos at once.
 
 Collect all results. Update `.session.yaml` with transcript status for each video.
 
@@ -202,7 +204,7 @@ To refine this session:
 
 - If setup.sh fails, stop and show the error to the user.
 - If search finds 0 candidates AND no URLs provided, ask the user to provide URLs or refine the topics.
-- If all transcripts fail (likely IP rate-limiting), inform the user: "YouTube is rate-limiting transcript requests from this IP. Try again in a few minutes, or provide specific video URLs."
+- If all transcripts fail (likely IP rate-limiting despite automatic retries), inform the user: "YouTube is rate-limiting transcript requests from this IP. Try: (1) wait a few minutes and retry with /yt-refine, or (2) add --cookies-from-browser chrome to your next /yt-research call to authenticate via your browser session."
 - If an individual step fails, log it but continue processing other videos.
 - Always produce output even if some videos failed — partial results are better than none.
 

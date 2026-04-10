@@ -50,23 +50,30 @@ An agentic suite for Claude Code that processes YouTube videos into consolidated
         humanizer-patterns.md # 29 AI writing patterns (blader v2.5.1)
 scripts/
   setup.sh                    # One-time: create venv, install deps
-  requirements.txt            # youtube-transcript-api
-  search_youtube.py           # yt-dlp search wrapper
-  fetch_transcript.py         # youtube-transcript-api wrapper
-  extract_metadata.py         # yt-dlp metadata extractor
+  requirements.txt            # requests
+  search_youtube.py           # YouTube Data API v3 search
+  fetch_transcript.py         # Supadata.ai transcript API
+  extract_metadata.py         # YouTube Data API v3 metadata
 sessions/                     # Output (gitignored) — one folder per session
 ```
 
 ## Environment Requirements
 
 - **Python 3.11+** — for scripts
-- **yt-dlp** — system-installed (brew install yt-dlp). Used for video search and metadata.
-- **youtube-transcript-api** — installed in `.venv/`. Used for transcript fetching.
+- **requests** — installed in `.venv/` via `setup.sh`
 - **Virtual environment** — at `.venv/`. Run `bash scripts/setup.sh` to create it.
+- **YOUTUBE_API_KEY** — YouTube Data API v3 key (free, 10,000 units/day). Used for video search and metadata.
+  Get key: https://console.cloud.google.com/apis/library/youtube.googleapis.com
+- **SUPADATA_API_KEY** — Supadata.ai API key (free tier: 100 transcripts/month). Used for transcript fetching.
+  Get key: https://supadata.ai
 
 ### Quick setup
 ```bash
 bash scripts/setup.sh
+
+# Then set API keys (add to ~/.zshrc for persistence):
+export YOUTUBE_API_KEY=your_key_here
+export SUPADATA_API_KEY=your_key_here
 ```
 
 ### Manual script usage
@@ -118,12 +125,12 @@ When spawning sub-agents from yt-research:
 
 | Script | Exit 0 | Exit 1 | Exit 2 | Exit 3 |
 |--------|--------|--------|--------|--------|
-| search_youtube.py | Found videos | No results | yt-dlp error | — |
-| fetch_transcript.py | Success | No transcript | Video unavailable/blocked | Dep missing |
-| extract_metadata.py | Success | Video not found | yt-dlp error | — |
+| search_youtube.py | Found videos | No results | API error | API key missing |
+| fetch_transcript.py | Success | No transcript available | Fetch failed / retries exhausted | API key missing or quota exceeded |
+| extract_metadata.py | Success | Video not found | API error | API key missing |
 
 ## Known Limitations
 
-- **Transcript API rate limiting**: YouTube may block transcript requests if many are made in quick succession from the same IP. If this happens, the affected videos are marked as rejected with reason "Request blocked". Wait a few minutes and retry with `/yt-refine`.
-- **yt-dlp metadata**: Direct URL metadata fetch may be blocked by YouTube bot detection. The script falls back to the search extractor automatically.
+- **Supadata free quota**: 100 transcripts/month on the free tier. If exhausted, `fetch_transcript.py` exits with code 3. Upgrade at https://supadata.ai/pricing or wait for monthly reset.
+- **YouTube API daily quota**: 10,000 units/day free. One search costs 100 units; metadata lookup costs 1 unit. Quota resets at midnight Pacific Time. If exceeded, `search_youtube.py` exits with code 2 with a clear message.
 - **Auto-generated transcripts**: Many videos only have auto-generated transcripts, which can have word-salad sections. Analysis agents are instructed to handle this gracefully.

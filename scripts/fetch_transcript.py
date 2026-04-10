@@ -1,43 +1,41 @@
 #!/usr/bin/env python3
 """
-Fetch transcript for a YouTube video using youtube-transcript-api v1.x.
+Fetch transcript for a YouTube video via Supadata.ai API.
+
+Requires SUPADATA_API_KEY environment variable (or --api-key argument).
+Get a free key at: https://supadata.ai (100 free transcripts/month).
 
 Usage:
     python3 scripts/fetch_transcript.py --video-id WSPChlfxJyA
     python3 scripts/fetch_transcript.py --video-id WSPChlfxJyA --lang en
     python3 scripts/fetch_transcript.py --video-id WSPChlfxJyA --output /path/to/file.txt
+    python3 scripts/fetch_transcript.py --video-id WSPChlfxJyA --retries 3 --delay 2.0
 
 Output:
     - Transcript text to stdout (or --output file)
-    - Metadata JSON to stderr: {"lang": "en", "type": "manual|auto", "segment_count": 245}
+    - Metadata JSON to stderr: {"lang": "en", "type": "auto", "segment_count": 245, "method": "supadata"}
 
 Exit codes:
     0 = success
-    1 = no transcript available
-    2 = video not found or inaccessible / blocked
-    3 = dependency missing (youtube-transcript-api not installed)
+    1 = no transcript available (transcripts disabled or video has no captions)
+    2 = video not found or inaccessible after all retries
+    3 = API key missing or authentication/quota error
 """
 
 import argparse
 import json
+import os
 import re
 import sys
+import time
 
 try:
-    from youtube_transcript_api import (
-        YouTubeTranscriptApi,
-        NoTranscriptFound,
-        TranscriptsDisabled,
-        VideoUnavailable,
-    )
-    from youtube_transcript_api._errors import RequestBlocked, IpBlocked
+    import requests
 except ImportError:
-    print(
-        "ERROR: youtube-transcript-api not installed.\n"
-        "Run: bash scripts/setup.sh",
-        file=sys.stderr,
-    )
+    print("ERROR: requests not installed. Run: bash scripts/setup.sh", file=sys.stderr)
     sys.exit(3)
+
+SUPADATA_API_BASE = "https://api.supadata.ai/v1"
 
 
 def extract_video_id(video_id_or_url: str) -> str:
@@ -53,104 +51,187 @@ def extract_video_id(video_id_or_url: str) -> str:
     return video_id_or_url
 
 
-def fetch_transcript(video_id: str, preferred_lang: str = "en") -> tuple[str, dict]:
+def clean_text(text: str) -> str:
+    """Remove HTML tags, bracketed annotations, and normalize whitespace."""
+    text = re.sub(r"<[^>]+>", "", text)
+    text = re.sub(r"\[.*?\]", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def fetch_transcript(
+    video_id: str,
+    preferred_lang: str = "en",
+    max_retries: int = 3,
+    base_delay: float = 2.0,
+    api_key: str | None = None,
+) -> tuple[str, dict]:
     """
-    Fetch transcript for a video using youtube-transcript-api v1.x.
+    Fetch transcript via Supadata.ai API with retry logic.
+
     Returns (transcript_text, metadata_dict).
-    Raises appropriate exceptions on failure.
+    Raises:
+        PermissionError  — API key missing, invalid, or quota exceeded (no retry)
+        LookupError      — no transcript available for this video (no retry)
+        ConnectionError  — all retries exhausted (transient errors)
     """
     video_id = extract_video_id(video_id)
-    api = YouTubeTranscriptApi()
 
-    try:
-        transcript_list = api.list(video_id)
-    except VideoUnavailable:
-        raise ValueError(f"Video {video_id} is unavailable or private")
-    except TranscriptsDisabled:
-        raise LookupError(f"Transcripts disabled for video {video_id}")
-    except (RequestBlocked, IpBlocked) as e:
-        raise ConnectionError(
-            f"Request blocked by YouTube for video {video_id}. "
-            "This usually means the IP is rate-limited. Try again later."
+    if not api_key:
+        api_key = os.environ.get("SUPADATA_API_KEY")
+    if not api_key:
+        raise PermissionError(
+            "SUPADATA_API_KEY not set.\n"
+            "Get a free key at: https://supadata.ai\n"
+            "Then: export SUPADATA_API_KEY=your_key_here"
         )
 
-    transcript = None
-    transcript_meta = {"type": "auto", "lang": "en"}
+    headers = {"x-api-key": api_key}
+    params = {"videoId": video_id, "lang": preferred_lang}
 
-    # Preference order:
-    # 1. Manual in preferred lang
-    # 2. Manual in English (if preferred != en)
-    # 3. Generated in preferred lang
-    # 4. Generated in English
-    # 5. Any available transcript
-    try_order = [
-        (transcript_list.find_manually_created_transcript, [preferred_lang], "manual"),
-    ]
-    if preferred_lang != "en":
-        try_order.append(
-            (transcript_list.find_manually_created_transcript, ["en"], "manual")
-        )
-    try_order.extend([
-        (transcript_list.find_generated_transcript, [preferred_lang], "auto"),
-        (transcript_list.find_generated_transcript, ["en"], "auto"),
-    ])
+    last_error: Exception | None = None
 
-    for finder, langs, t_type in try_order:
+    for attempt in range(max_retries + 1):
+        if attempt > 0:
+            delay = base_delay * (2 ** (attempt - 1))
+            print(
+                f"[fetch_transcript] Retry {attempt}/{max_retries} after {delay:.1f}s "
+                f"(video: {video_id})",
+                file=sys.stderr,
+            )
+            time.sleep(delay)
+
         try:
-            transcript = finder(langs)
-            transcript_meta["type"] = t_type
-            transcript_meta["lang"] = transcript.language_code
-            break
-        except NoTranscriptFound:
+            resp = requests.get(
+                f"{SUPADATA_API_BASE}/youtube/transcript",
+                headers=headers,
+                params=params,
+                timeout=30,
+            )
+        except requests.RequestException as e:
+            last_error = e
+            print(f"[fetch_transcript] Network error (attempt {attempt + 1}): {e}", file=sys.stderr)
             continue
 
-    if transcript is None:
-        # Last resort: grab whatever is available
-        available = list(transcript_list)
-        if not available:
-            raise LookupError(f"No transcripts available for video {video_id}")
-        transcript = available[0]
-        transcript_meta["type"] = "auto" if transcript.is_generated else "manual"
-        transcript_meta["lang"] = transcript.language_code
+        if resp.status_code == 200:
+            data = resp.json()
+            content = data.get("content", [])
+            lang = data.get("lang", preferred_lang)
+            available_langs = data.get("availableLangs", [])
 
-    # Fetch the actual transcript data
-    fetched = transcript.fetch()
-    transcript_meta["segment_count"] = len(fetched)
+            if not content:
+                raise LookupError(f"Supadata returned empty transcript for video {video_id}")
 
-    # Build clean text — FetchedTranscriptSnippet has .text attribute in v1.x
-    lines = []
-    for snippet in fetched:
-        text = snippet.text.strip() if hasattr(snippet, "text") else snippet.get("text", "").strip()
-        if text:
-            lines.append(text)
+            if isinstance(content, list):
+                # Segment format: [{"text": "...", "offset": 0.0, "duration": 2.5, "lang": "en"}, ...]
+                texts = [
+                    clean_text(seg.get("text", ""))
+                    for seg in content
+                    if seg.get("text", "").strip()
+                ]
+                transcript_text = " ".join(texts)
+                segment_count = len(content)
+            else:
+                # Plain text format
+                transcript_text = clean_text(str(content))
+                segment_count = transcript_text.count(". ") + transcript_text.count("? ") + 1
 
-    transcript_text = " ".join(lines)
-    # Clean up common transcript artifacts
-    transcript_text = re.sub(r"\s+", " ", transcript_text).strip()
-    transcript_text = re.sub(r"\[.*?\]", "", transcript_text)  # Remove [Music], [Applause] etc.
-    transcript_text = re.sub(r"\s+", " ", transcript_text).strip()
+            if len(transcript_text.strip()) < 30:
+                raise LookupError(
+                    f"Transcript for video {video_id} is too short to be useful "
+                    f"({len(transcript_text)} chars)"
+                )
 
-    return transcript_text, transcript_meta
+            meta = {
+                "lang": lang,
+                "type": "auto",
+                "segment_count": segment_count,
+                "method": "supadata",
+                "available_langs": available_langs,
+            }
+            return transcript_text, meta
+
+        elif resp.status_code == 401:
+            raise PermissionError(
+                "Supadata API key is invalid or expired. "
+                "Check your SUPADATA_API_KEY at https://supadata.ai/dashboard"
+            )
+
+        elif resp.status_code == 402:
+            raise PermissionError(
+                "Supadata API quota exceeded. "
+                "Upgrade your plan at https://supadata.ai/pricing or wait for the monthly reset."
+            )
+
+        elif resp.status_code == 404:
+            try:
+                err_msg = resp.json().get("message", resp.text[:200])
+            except Exception:
+                err_msg = resp.text[:200]
+            raise LookupError(
+                f"No transcript available for video {video_id}. "
+                f"Reason: {err_msg}"
+            )
+
+        elif resp.status_code == 429:
+            print(
+                f"[fetch_transcript] Supadata rate limited (attempt {attempt + 1}): 429 — waiting before retry",
+                file=sys.stderr,
+            )
+            last_error = ConnectionError("Supadata rate limit (429)")
+
+        else:
+            print(
+                f"[fetch_transcript] Supadata returned {resp.status_code} "
+                f"(attempt {attempt + 1}): {resp.text[:200]}",
+                file=sys.stderr,
+            )
+            last_error = ConnectionError(f"Supadata API error {resp.status_code}")
+
+    raise ConnectionError(
+        f"All transcript fetch attempts failed for video {video_id} after {max_retries} retries. "
+        f"Last error: {last_error}"
+    )
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Fetch YouTube transcript")
+    parser = argparse.ArgumentParser(
+        description="Fetch YouTube transcript via Supadata.ai API"
+    )
+    parser.add_argument("--video-id", required=True, help="YouTube video ID or URL")
+    parser.add_argument("--lang", default="en", help="Preferred transcript language (default: en)")
+    parser.add_argument("--output", help="Output file path (default: stdout)")
     parser.add_argument(
-        "--video-id", required=True, help="YouTube video ID or URL"
+        "--retries", type=int, default=3,
+        help="Max retries on rate-limited requests (default: 3)"
     )
     parser.add_argument(
-        "--lang", default="en", help="Preferred transcript language (default: en)"
+        "--delay", type=float, default=2.0,
+        help="Base delay in seconds between retries (default: 2.0)"
     )
-    parser.add_argument(
-        "--output", help="Output file path (default: stdout)"
-    )
+    parser.add_argument("--api-key", default=None, help="Supadata API key (overrides SUPADATA_API_KEY env var)")
+    # Kept for CLI compatibility — no longer functional
+    parser.add_argument("--cookies-from-browser", default=None, help=argparse.SUPPRESS)
     args = parser.parse_args()
 
+    if args.cookies_from_browser:
+        print(
+            "WARNING: --cookies-from-browser is no longer used. "
+            "Transcript fetching now goes through Supadata.ai API.",
+            file=sys.stderr,
+        )
+
     try:
-        text, meta = fetch_transcript(args.video_id, args.lang)
-    except ValueError as e:
+        text, meta = fetch_transcript(
+            args.video_id,
+            args.lang,
+            args.retries,
+            args.delay,
+            args.api_key,
+        )
+    except PermissionError as e:
         print(f"ERROR: {e}", file=sys.stderr)
-        sys.exit(2)
+        sys.exit(3)
     except LookupError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
@@ -161,10 +242,10 @@ def main():
         print(f"ERROR: Unexpected error: {e}", file=sys.stderr)
         sys.exit(2)
 
-    # Output metadata to stderr
+    # Output metadata to stderr (consumed by transcript-agent)
     print(json.dumps(meta), file=sys.stderr)
 
-    # Output transcript
+    # Output transcript text
     if args.output:
         with open(args.output, "w", encoding="utf-8") as f:
             f.write(text)

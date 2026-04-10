@@ -12,11 +12,35 @@ Provide topics (and optionally specific YouTube URLs). The suite:
 
 ## Setup
 
+### 1. Install dependencies
+
 ```bash
 bash scripts/setup.sh
 ```
 
-Requires: Python 3.11+, [yt-dlp](https://github.com/yt-dlp/yt-dlp) (`brew install yt-dlp`).
+Requires Python 3.11+.
+
+### 2. Get API keys (both free)
+
+**YouTube Data API v3** — for video search and metadata (10,000 units/day free)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/library/youtube.googleapis.com)
+2. Enable the YouTube Data API v3
+3. Create an API key under **Credentials**
+
+**Supadata.ai** — for transcript fetching (100 transcripts/month free)
+
+1. Sign up at [supadata.ai](https://supadata.ai)
+2. Copy your API key from the dashboard
+
+### 3. Export the keys
+
+```bash
+export YOUTUBE_API_KEY=your_youtube_key_here
+export SUPADATA_API_KEY=your_supadata_key_here
+```
+
+Add both lines to `~/.zshrc` (or `~/.bashrc`) so they persist across sessions.
 
 ## Usage
 

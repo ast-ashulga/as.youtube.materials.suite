@@ -17,14 +17,6 @@ fi
 PYTHON_VERSION=$(python3 --version 2>&1)
 echo "Python: $PYTHON_VERSION"
 
-# Check yt-dlp
-if ! command -v yt-dlp &>/dev/null; then
-    echo "ERROR: yt-dlp not found. Install with: brew install yt-dlp"
-    exit 1
-fi
-YTDLP_VERSION=$(yt-dlp --version 2>&1)
-echo "yt-dlp: $YTDLP_VERSION"
-
 # Create venv if missing
 if [ ! -d "$VENV_DIR" ]; then
     echo "Creating virtual environment at $VENV_DIR..."
@@ -37,14 +29,33 @@ echo "Installing Python dependencies..."
 "$VENV_DIR/bin/pip" install --quiet -r "$SCRIPT_DIR/requirements.txt"
 
 # Verify installation
-if "$VENV_DIR/bin/python" -c "import youtube_transcript_api; print('youtube-transcript-api: ok')" 2>/dev/null; then
+if "$VENV_DIR/bin/python" -c "import requests; print('requests: ok')" 2>/dev/null; then
     echo "Setup complete. All dependencies ready."
 else
-    echo "ERROR: youtube-transcript-api installation failed."
+    echo "ERROR: requests installation failed."
     exit 1
 fi
 
 echo ""
+echo "=== API Keys Required ==="
+echo ""
+echo "This suite requires two API keys. Set them in your shell profile"
+echo "(~/.zshrc or ~/.bashrc) or export them before running:"
+echo ""
+echo "1. YouTube Data API v3 (free — 10,000 units/day)"
+echo "   Get key: https://console.cloud.google.com/apis/library/youtube.googleapis.com"
+echo "   export YOUTUBE_API_KEY=your_key_here"
+echo ""
+echo "2. Supadata.ai Transcript API (free — 100 transcripts/month)"
+echo "   Get key: https://supadata.ai"
+echo "   export SUPADATA_API_KEY=your_key_here"
+echo ""
+echo "To verify keys are set:"
+echo "  echo \$YOUTUBE_API_KEY"
+echo "  echo \$SUPADATA_API_KEY"
+echo ""
 echo "To use scripts manually:"
 echo "  source $VENV_DIR/bin/activate"
 echo "  python3 scripts/search_youtube.py --query 'topic' --max-results 5"
+echo "  python3 scripts/fetch_transcript.py --video-id VIDEO_ID"
+echo "  python3 scripts/extract_metadata.py --url 'https://www.youtube.com/watch?v=VIDEO_ID'"
