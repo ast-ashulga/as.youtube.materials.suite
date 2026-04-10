@@ -94,3 +94,14 @@ Each session creates a folder: `sessions/YYYY-MM-DD_topic-slug/`
 - **brief** (default): Summary + Key Takeaways
 - **standard**: + Notable Quotes, Action Items, Key Terminology
 - **comprehensive**: + Chapter Breakdown, Mental Models, Speaker Analysis
+
+## Example Session
+
+See [`examples/sessions/2026-04-10_power-of-ai-coding-agents-in-2026/`](examples/sessions/2026-04-10_power-of-ai-coding-agents-in-2026/) for a complete example output.
+
+- **Topic**: Power of AI Coding Agents in 2026
+- **Depth**: standard
+- **Videos**: 20 included across 5 themes (Agent Fundamentals, Developer Workflow, Tool Landscape, No-Code Platforms, Trends)
+- **Languages**: English + Russian
+
+Start from [`index.md`](examples/sessions/2026-04-10_power-of-ai-coding-agents-in-2026/index.md) to navigate the session.
